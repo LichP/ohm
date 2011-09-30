@@ -1788,7 +1788,7 @@ module Ohm
     # @see Ohm::Model::Wrapper
     # @see http://en.wikipedia.org/wiki/Lazy_evaluation Lazy evaluation
     def self.const_missing(name)
-      wrapper = Wrapper.new(name) { const_get(name) }
+      wrapper = Wrapper.new(name) { eval(name.to_s) }
 
       # Allow others to hook to const_missing.
       begin
