@@ -1817,7 +1817,7 @@ module Ohm
       return found if found
 
       # Next look in the known model subclasses
-      found = self.known_models.select { |model| model.to_s =~ /#{name}/ }
+      found = self.known_models.select { |model| model.to_s =~ /::#{name}/ }
       case
         when found.length > 1
           raise(::NameError, "Found more than one subclass match for constant #{name}")
