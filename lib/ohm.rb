@@ -1788,7 +1788,7 @@ module Ohm
     # @see Ohm::Model::Wrapper
     # @see http://en.wikipedia.org/wiki/Lazy_evaluation Lazy evaluation
     def self.const_missing(name)
-      wrapper = Wrapper.new(name) { eval(name.to_s) }
+      wrapper = Wrapper.new(name) { const_get(name) }
 
       # Allow others to hook to const_missing.
       begin
@@ -1797,6 +1797,35 @@ module Ohm
       end
 
       wrapper
+    end
+    
+    # Maintains a list of subclasses to use with const_get
+    def self.inherited(subclass)
+      @@models ||= []
+      @@models << subclass
+    end
+    
+    def self.known_models
+      @@models ||= []
+    end
+
+    # Allows unwrapped constants whose namespace has been closed to be looked
+    # up from known subclasses
+    def self.const_get(name)
+      # First look in the namespace of the current class
+      found = self.constants.find { |ohm_const| ohm_const == name }
+      return found if found
+
+      # Next look in the known model subclasses
+      found = self.known_models.select { |model| model.to_s =~ /#{name}/ }
+      case
+        when found.length > 1
+          raise(::NameError, "Found more than one subclass match for constant #{name}")
+        when found.length == 1
+          return found.first
+        when found.length == 0
+          super(name)
+      end
     end
 
   private
